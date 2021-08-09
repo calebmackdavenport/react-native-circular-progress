@@ -117,7 +117,7 @@ onAnimationComplete | function               |                         | Functio
 onFillChange        | function               |                         | Function that returns current progress on every change
 tintColorSecondary  | string                 | the same as tintColor   | To change fill color from tintColor to tintColorSecondary as animation progresses
 secondFill          | number                 | 0                       | Current second progress / fill
-secondFilltintColor | string                 | the same as tintColor   | Color of the second progress line if exists
+secondFillTintColor | string                 | the same as tintColor   | Color of the second progress line if exists
 
 `AnimatedCircularProgress` also exposes the following functions:
 
