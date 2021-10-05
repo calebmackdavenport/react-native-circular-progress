@@ -1,58 +1,48 @@
-import React from 'react';
-import { StyleSheet, Text, PanResponder, View, PanResponderInstance } from 'react-native';
+import React, { useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { View, StyleSheet, Text, PanResponder, PanResponderInstance } from 'react-native';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 const MAX_POINTS = 500;
-export default class App extends React.Component {
-  state = {
-    isMoving: false,
-    pointsDelta: 0,
-    points: 325,
-  };
 
-  _panResponder : PanResponderInstance;
-  _circularProgressRef: React.RefObject<AnimatedCircularProgress>;
+export default function App() {
 
-  constructor(props: Readonly<{}>) {
-    super(props);
-    this._circularProgressRef = React.createRef();
-    this._panResponder = PanResponder.create({
-      onStartShouldSetPanResponder: (evt, gestureState) => true,
-      onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
-      onMoveShouldSetPanResponder: (evt, gestureState) => true,
-      onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
+  const [points, setPoints] = useState<number>(325);
+  const [pointsDelta, setPointsDelta] = useState<number>(0);
+  const [isMoving, setIsMoving] = useState<boolean>(false);
 
-      onPanResponderGrant: (evt, gestureState) => {
-        this.setState({ isMoving: true, pointsDelta: 0 });
-      },
+  const fill = (points / MAX_POINTS) * 100;
 
-      onPanResponderMove: (evt, gestureState) => {
-        if (this._circularProgressRef.current) {
-          this._circularProgressRef.current.animate(0, 0);
-        }
-        // For each 2 pixels add or subtract 1 point
-        this.setState({ pointsDelta: Math.round(-gestureState.dy / 2) });
-      },
-      onPanResponderTerminationRequest: (evt, gestureState) => true,
-      onPanResponderRelease: (evt, gestureState) => {
-        if (this._circularProgressRef.current) {
-          this._circularProgressRef.current.animate(100, 3000);
-        }
-        let points = this.state.points + this.state.pointsDelta;
-        console.log(Math.min(points, MAX_POINTS));
-        this.setState({
-          isMoving: false,
-          points: points > 0 ? Math.min(points, MAX_POINTS) : 0,
-          pointsDelta: 0,
-        });
-      },
-    });
-  }
-  
-  render() {
-    const fill = (this.state.points / MAX_POINTS) * 100;
-    return (
-      <View style={styles.container} {...this._panResponder.panHandlers}>
+  const circularProgressRef: React.RefObject<AnimatedCircularProgress> = React.createRef();
+  const panResponder: PanResponderInstance = PanResponder.create({
+    onStartShouldSetPanResponder: (_, gestureState) => true,
+    onStartShouldSetPanResponderCapture: (_, gestureState) => true,
+    onMoveShouldSetPanResponder: (_, gestureState) => true,
+    onMoveShouldSetPanResponderCapture: (_, gestureState) => true,
+    onPanResponderGrant: (_, gestureState) => {
+      setIsMoving(true);
+      setPointsDelta(0);
+    },
+    onPanResponderMove: (_, gestureState) => {
+      circularProgressRef.current && circularProgressRef.current.animate(0, 0);
+      // For each 2 pixels add or subtract 1 point
+      setPointsDelta(Math.round(-gestureState.dy / 2));
+    },
+    onPanResponderTerminationRequest: (_, gestureState) => true,
+    onPanResponderRelease: (_, gestureState) => {
+      circularProgressRef.current && circularProgressRef.current.animate(100, 3000);
+      let combinedPoints = points + pointsDelta;
+      let clampedPoints = Math.max(Math.min(combinedPoints, MAX_POINTS), 0);
+      setIsMoving(false);
+      setPoints(clampedPoints);
+      setPointsDelta(0);
+    },
+  });
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style="auto" />
+      <View style={styles.container} {...panResponder.panHandlers}>
         <AnimatedCircularProgress
           size={200}
           width={3}
@@ -60,6 +50,7 @@ export default class App extends React.Component {
           fill={fill}
           tintColor="#00e0ff"
           backgroundColor="#3d5875"
+          delay={250}
         >
           {fill => <Text style={styles.points}>{Math.round((MAX_POINTS * fill) / 100)}</Text>}
         </AnimatedCircularProgress>
@@ -75,6 +66,7 @@ export default class App extends React.Component {
           arcSweepAngle={240}
           rotation={240}
           lineCap="round"
+          delay={250}
         />
 
         <AnimatedCircularProgress
@@ -83,18 +75,18 @@ export default class App extends React.Component {
           fill={0}
           tintColor="#00e0ff"
           onAnimationComplete={() => console.log('onAnimationComplete')}
-          ref={this._circularProgressRef}
+          ref={circularProgressRef}
           backgroundColor="#3d5875"
           arcSweepAngle={180}
+          delay={250}
         />
 
-        <Text style={[styles.pointsDelta, this.state.isMoving && styles.pointsDeltaActive]}>
-          {this.state.pointsDelta >= 0 && '+'}
-          {this.state.pointsDelta}
+        <Text style={[styles.pointsDelta, isMoving && styles.pointsDeltaActive]}>
+          {pointsDelta >= 0 && `+ ${pointsDelta}`}
         </Text>
       </View>
-    );
-  }
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
