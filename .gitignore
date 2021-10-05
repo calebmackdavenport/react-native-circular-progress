@@ -96,3 +96,6 @@ xcuserdata
 
 # Home
 /home/dist
+
+# NPM
+.npmrc
